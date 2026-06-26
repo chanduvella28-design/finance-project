@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Active Customers</title>
+</head>
+<body>
+
+<h1>Active Customers</h1>
+
+<table border="1">
+
+<tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Mobile</th>
+    <th>Amount</th>
+    <th>Rate</th>
+    <th>Duration</th>
+    <th>Status</th>
+    <th>Action</th>
+</tr>
+
+{% for customer in customers %}
+
+<tr>
+    <td>{{ customer[0] }}</td>
+    <td>
+    <a href="/customer/{{ customer[0] }}">
+        {{ customer[1] }}
+    </a>
+    </td>
+    <td>{{ customer[2] }}</td>
+    <td>{{ customer[3] }}</td>
+    <td>{{ customer[4] }}</td>
+    <td>{{ customer[5] }}</td>
+    <td>{{ customer[6] }}</td>
+
+    <td>
+        <a href="/close_loan/{{ customer[0] }}">
+            Close Loan
+        </a>
+    </td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+<br><br>
+
+<a href="/">
+    Back To Home
+</a>
+
+</body>
+</html>

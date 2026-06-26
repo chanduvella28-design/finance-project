@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reminder Dashboard</title>
+</head>
+<body>
+
+<h1>Reminder Dashboard</h1>
+
+<table border="1">
+
+<tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Amount</th>
+    <th>Rate %</th>
+    <th>Due Date</th>
+    <th>Interest Amount</th>
+    <th>Action</th>
+</tr>
+
+{% for customer in customers %}
+
+<tr>
+    <td>{{ customer[0] }}</td>
+    <td>{{ customer[1] }}</td>
+    <td>{{ customer[2] }}</td>
+    <td>{{ customer[3] }}</td>
+    <td>{{ customer[4] }}</td>
+    <td>{{ customer[5] }}</td>
+
+    <td>
+        <a href="/collect_interest/{{ customer[0] }}">
+            Collect Interest
+        </a>
+    </td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+<br><br>
+
+<a href="/">Back To Home</a>
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+<form action="/save_customer" method="POST">
+
+    Customer Name:
+    <input type="text" name="name" required>
+    <br><br>
+
+    Mobile:
+    <input type="text" name="mobile" required>
+    <br><br>
+
+    Address:
+    <input type="text" name="address">
+    <br><br>
+
+    Principal Amount:
+    <input type="number" name="amount" required>
+    <br><br>
+
+    Interest Rate:
+    <input type="number" name="rate" required>
+    <br><br>
+
+    Loan Date:
+    <input type="date" name="loan_date" required>
+    <br><br>
+
+    Duration:
+    <select name="duration_type">
+        <option value="DAILY">Daily</option>
+        <option value="MONTHLY">Monthly</option>
+        <option value="YEARLY">Yearly</option>
+    </select>
+
+    <br><br>
+
+    <button type="submit">
+        Save Customer
+    </button>
+
+</form>

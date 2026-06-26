@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Details</title>
+</head>
+<body>
+
+<h1>Customer Details</h1>
+
+<h3>Name: {{ customer[1] }}</h3>
+<h3>Mobile: {{ customer[2] }}</h3>
+<h3>Address: {{ customer[3] }}</h3>
+<h3>Principal Amount: ₹{{ customer[4] }}</h3>
+<h3>Interest Rate: {{ customer[5] }}%</h3>
+<h3>Loan Date: {{ customer[6] }}</h3>
+<h3>Due Date: {{ customer[8] }}</h3>
+<h3>Status: {{ customer[10] }}</h3>
+
+<hr>
+
+<h2>Interest Payment History</h2>
+
+<table border="1">
+<tr>
+    <th>Date</th>
+    <th>Amount</th>
+</tr>
+
+{% for payment in payments %}
+<tr>
+    <td>{{ payment[0] }}</td>
+    <td>{{ payment[1] }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="/">Back To Home</a>
+
+</body>
+</html>
