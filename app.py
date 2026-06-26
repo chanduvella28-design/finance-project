@@ -219,7 +219,7 @@ def collect_interest(customer_id):
             duration_type,
             due_date
         FROM customers
-        WHERE id=%?
+        WHERE id=?
     """, (customer_id,))
 
     customer = cursor.fetchone()
@@ -231,6 +231,7 @@ def collect_interest(customer_id):
     principal = float(customer[1])
     duration = customer[2]
     due_date = customer[3]
+
     due_date = datetime.strptime(due_date, "%Y-%m-%d")
 
     interest_amount = principal * rate / 100
@@ -255,10 +256,12 @@ def collect_interest(customer_id):
 
     cursor.execute("""
         UPDATE customers
-        SET due_date=%?
-        WHERE id=%?
-    """, (  next_due.strftime("%Y-%m-%d"),
-    customer_id))
+        SET due_date=?
+        WHERE id=?
+    """, (
+        next_due.strftime("%Y-%m-%d"),
+        customer_id
+    ))
 
     conn.commit()
 
