@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request,redirect
 from datetime import datetime, timedelta
 import sqlite3
 
@@ -168,6 +168,8 @@ def active_customers():
     )
 
 
+from flask import redirect
+
 @app.route('/close_loan/<int:customer_id>')
 def close_loan(customer_id):
 
@@ -176,12 +178,12 @@ def close_loan(customer_id):
         SET
             principal_paid = 1,
             status = 'CLOSED'
-        WHERE id=%?
+        WHERE id=?
     """, (customer_id,))
 
     conn.commit()
 
-    return "Loan Closed Successfully"
+    return redirect('/active_customers')
 
 
 @app.route('/reminders')
