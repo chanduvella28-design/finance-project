@@ -1,18 +1,37 @@
 from flask import Flask, render_template, request
 from datetime import datetime, timedelta
-import mysql.connector
+import sqlite3
 
 app = Flask(__name__)
 
-conn = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="1234",
-    database="finance_db"
-)
-
+conn = sqlite3.connect("finance.db", check_same_thread=False)
 cursor = conn.cursor()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS customers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    mobile TEXT,
+    address TEXT,
+    principal_amount REAL,
+    interest_rate REAL,
+    loan_date TEXT,
+    duration_type TEXT,
+    due_date TEXT,
+    principal_paid INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'ACTIVE'
+)
+""")
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS interest_payments (
+    payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER,
+    payment_date TEXT,
+    interest_amount REAL
+)
+""")
+
+conn.commit()
 
 @app.route('/')
 def home():
@@ -42,7 +61,7 @@ def home():
         SELECT COUNT(*)
         FROM customers
         WHERE status='ACTIVE'
-        AND due_date <= CURDATE()
+        AND due_date <= date('now')
     """)
     due_customers = cursor.fetchone()[0]
 
@@ -103,7 +122,7 @@ def save_customer():
         principal_paid,
         status
     )
-    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    VALUES (?,?,?,?,?,?,?,?,?,?)
     """
 
     values = (
@@ -157,7 +176,7 @@ def close_loan(customer_id):
         SET
             principal_paid = 1,
             status = 'CLOSED'
-        WHERE id=%s
+        WHERE id=%?
     """, (customer_id,))
 
     conn.commit()
@@ -198,7 +217,7 @@ def collect_interest(customer_id):
             duration_type,
             due_date
         FROM customers
-        WHERE id=%s
+        WHERE id=%?
     """, (customer_id,))
 
     customer = cursor.fetchone()
@@ -210,13 +229,14 @@ def collect_interest(customer_id):
     principal = float(customer[1])
     duration = customer[2]
     due_date = customer[3]
+    due_date = datetime.strptime(due_date, "%Y-%m-%d")
 
     interest_amount = principal * rate / 100
 
     cursor.execute("""
         INSERT INTO interest_payments
         (customer_id, payment_date, interest_amount)
-        VALUES (%s, CURDATE(), %s)
+        VALUES (?, date('now'), ?)
     """, (customer_id, interest_amount))
 
     if duration == "DAILY":
@@ -233,9 +253,10 @@ def collect_interest(customer_id):
 
     cursor.execute("""
         UPDATE customers
-        SET due_date=%s
-        WHERE id=%s
-    """, (next_due, customer_id))
+        SET due_date=%?
+        WHERE id=%?
+    """, (  next_due.strftime("%Y-%m-%d"),
+    customer_id))
 
     conn.commit()
 
@@ -265,7 +286,7 @@ def customer_details(customer_id):
     cursor.execute("""
         SELECT *
         FROM customers
-        WHERE id=%s
+        WHERE id=%?
     """, (customer_id,))
 
     customer = cursor.fetchone()
@@ -275,7 +296,7 @@ def customer_details(customer_id):
             payment_date,
             interest_amount
         FROM interest_payments
-        WHERE customer_id=%s
+        WHERE customer_id=%?
         ORDER BY payment_date DESC
     """, (customer_id,))
 
@@ -288,4 +309,4 @@ def customer_details(customer_id):
     )
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
