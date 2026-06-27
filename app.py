@@ -210,6 +210,8 @@ def close_loan(customer_id):
 @app.route('/reminders')
 def reminders():
 
+    today = datetime.today().strftime("%Y-%m-%d")
+
     cursor.execute("""
         SELECT
             id,
@@ -217,18 +219,52 @@ def reminders():
             principal_amount,
             interest_rate,
             due_date,
-            (principal_amount * interest_rate / 100) AS interest_amount
+            duration_type
         FROM customers
         WHERE status='ACTIVE'
-    """)
+        AND due_date <= ?
+    """, (today,))
 
-    customers = cursor.fetchall()
+    rows = cursor.fetchall()
+
+    customers = []
+
+    for c in rows:
+
+        customer_id = c[0]
+        name = c[1]
+        principal = float(c[2])
+        rate = float(c[3])
+        due_date = c[4]
+        duration = c[5]
+
+        if duration == "DAILY":
+            interest = (principal * rate) / (100 * 30)
+
+        elif duration == "MONTHLY":
+            interest = (principal * rate) / 100
+
+        elif duration == "YEARLY":
+            interest = (principal * rate * 12) / 100
+
+        else:
+            interest = 0
+
+        customers.append(
+            (
+                customer_id,
+                name,
+                principal,
+                rate,
+                due_date,
+                interest
+            )
+        )
 
     return render_template(
         'reminders.html',
         customers=customers
     )
-
 
 @app.route('/collect_interest/<int:customer_id>')
 def collect_interest(customer_id):
@@ -255,7 +291,17 @@ def collect_interest(customer_id):
 
     due_date = datetime.strptime(due_date, "%Y-%m-%d")
 
-    interest_amount = principal * rate / 100
+    if duration == "DAILY":
+        interest_amount = (principal * 1 * rate) / (100 * 30)
+
+    elif duration == "MONTHLY":
+        interest_amount = (principal * 1 * rate) / 100
+
+    elif duration == "YEARLY":
+        interest_amount = (principal * 1 * rate * 12) / 100
+
+    else:
+        interest_amount = principal * rate / 100
 
     cursor.execute("""
         INSERT INTO interest_payments
