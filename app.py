@@ -194,7 +194,7 @@ def close_loan(customer_id):
 @app.route('/reminders')
 def reminders():
 
-    today = datetime.today().strftime("%Y-%m-%d")
+    today = datetime.today().date()
 
     cursor.execute("""
         SELECT
@@ -206,8 +206,8 @@ def reminders():
             duration_type
         FROM customers
         WHERE status='ACTIVE'
-        AND due_date <= %s
-    """, (today,))
+        ORDER BY due_date
+    """)
 
     rows = cursor.fetchall()
 
@@ -222,28 +222,40 @@ def reminders():
         due_date = c[4]
         duration = c[5]
 
-        if duration == "DAILY":
-            interest = (principal * rate) / (100 * 30)
-
-        elif duration == "MONTHLY":
-            interest = (principal * rate) / 100
-
-        elif duration == "YEARLY":
-            interest = (principal * rate * 12) / 100
-
-        else:
-            interest = 0
-
-        customers.append(
-            (
-                customer_id,
-                name,
-                principal,
-                rate,
+        # Convert due_date if it is string
+        if isinstance(due_date, str):
+            due_date_obj = datetime.strptime(
                 due_date,
-                interest
+                "%Y-%m-%d"
+            ).date()
+        else:
+            due_date_obj = due_date
+
+        # Show only customers whose due date is today or earlier
+        if due_date_obj <= today:
+
+            if duration == "DAILY":
+                interest = (principal * rate) / (100 * 30)
+
+            elif duration == "MONTHLY":
+                interest = (principal * rate) / 100
+
+            elif duration == "YEARLY":
+                interest = (principal * rate * 12) / 100
+
+            else:
+                interest = 0
+
+            customers.append(
+                (
+                    customer_id,
+                    name,
+                    principal,
+                    rate,
+                    due_date_obj,
+                    round(interest, 2)
+                )
             )
-        )
 
     return render_template(
         'reminders.html',
