@@ -194,8 +194,6 @@ def close_loan(customer_id):
 @app.route('/reminders')
 def reminders():
 
-    today = datetime.today().date()
-
     cursor.execute("""
         SELECT
             id,
@@ -206,6 +204,7 @@ def reminders():
             duration_type
         FROM customers
         WHERE status='ACTIVE'
+        AND due_date <= CURRENT_DATE
         ORDER BY due_date
     """)
 
@@ -222,40 +221,28 @@ def reminders():
         due_date = c[4]
         duration = c[5]
 
-        # Convert due_date if it is string
-        if isinstance(due_date, str):
-            due_date_obj = datetime.strptime(
-                due_date,
-                "%Y-%m-%d"
-            ).date()
+        if duration == "DAILY":
+            interest = (principal * rate) / (100 * 30)
+
+        elif duration == "MONTHLY":
+            interest = (principal * rate) / 100
+
+        elif duration == "YEARLY":
+            interest = (principal * rate * 12) / 100
+
         else:
-            due_date_obj = due_date
+            interest = 0
 
-        # Show only customers whose due date is today or earlier
-        if due_date_obj <= today:
-
-            if duration == "DAILY":
-                interest = (principal * rate) / (100 * 30)
-
-            elif duration == "MONTHLY":
-                interest = (principal * rate) / 100
-
-            elif duration == "YEARLY":
-                interest = (principal * rate * 12) / 100
-
-            else:
-                interest = 0
-
-            customers.append(
-                (
-                    customer_id,
-                    name,
-                    principal,
-                    rate,
-                    due_date_obj,
-                    round(interest, 2)
-                )
+        customers.append(
+            (
+                customer_id,
+                name,
+                principal,
+                rate,
+                due_date,
+                round(interest, 2)
             )
+        )
 
     return render_template(
         'reminders.html',
