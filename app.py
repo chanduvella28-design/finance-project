@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request,redirect,session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import psycopg2
 
 app = Flask(__name__)
@@ -273,26 +273,42 @@ def collect_interest(customer_id):
     duration = customer[2]
     due_date = customer[3]
 
-    due_date = datetime.strptime(due_date, "%Y-%m-%d")
+    # Convert string to date only if needed
+    if isinstance(due_date, str):
+        due_date = datetime.strptime(
+            due_date,
+            "%Y-%m-%d"
+        ).date()
 
+    # Interest Calculation
     if duration == "DAILY":
-        interest_amount = (principal * 1 * rate) / (100 * 30)
+        interest_amount = (principal * rate) / (100 * 30)
 
     elif duration == "MONTHLY":
-        interest_amount = (principal * 1 * rate) / 100
+        interest_amount = (principal * rate) / 100
 
     elif duration == "YEARLY":
-        interest_amount = (principal * 1 * rate * 12) / 100
+        interest_amount = (principal * rate * 12) / 100
 
     else:
-        interest_amount = principal * rate / 100
+        interest_amount = (principal * rate) / 100
 
+    # Save payment history
     cursor.execute("""
         INSERT INTO interest_payments
-        (customer_id, payment_date, interest_amount)
-        VALUES (%s, date('now'), %s)
-    """, (customer_id, interest_amount))
+        (
+            customer_id,
+            payment_date,
+            interest_amount
+        )
+        VALUES (%s, %s, %s)
+    """, (
+        customer_id,
+        date.today(),
+        interest_amount
+    ))
 
+    # Next Due Date
     if duration == "DAILY":
         next_due = due_date + timedelta(days=1)
 
@@ -305,12 +321,13 @@ def collect_interest(customer_id):
     else:
         next_due = due_date
 
+    # Update customer due date
     cursor.execute("""
         UPDATE customers
         SET due_date=%s
         WHERE id=%s
     """, (
-        next_due.strftime("%Y-%m-%d"),
+        next_due,
         customer_id
     ))
 
