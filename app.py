@@ -312,7 +312,7 @@ def customer_details(customer_id):
     cursor.execute("""
         SELECT *
         FROM customers
-        WHERE id=%?
+        WHERE id=?
     """, (customer_id,))
 
     customer = cursor.fetchone()
@@ -322,7 +322,7 @@ def customer_details(customer_id):
             payment_date,
             interest_amount
         FROM interest_payments
-        WHERE customer_id=%?
+        WHERE customer_id=?
         ORDER BY payment_date DESC
     """, (customer_id,))
 
