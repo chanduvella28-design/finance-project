@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request,redirect,session
 from datetime import datetime, timedelta, date
 import psycopg2
+import qrcode
+import os
 
 app = Flask(__name__)
 app.secret_key="finance123"
@@ -247,6 +249,72 @@ def reminders():
     return render_template(
         'reminders.html',
         customers=customers
+    )
+
+@app.route('/show_qr/<int:customer_id>')
+def show_qr(customer_id):
+
+    import os
+
+    cursor.execute("""
+        SELECT
+            name,
+            principal_amount,
+            interest_rate,
+            duration_type
+        FROM customers
+        WHERE id=%s
+    """, (customer_id,))
+
+    customer = cursor.fetchone()
+
+    if not customer:
+        return "Customer Not Found"
+
+    name = customer[0]
+    principal = float(customer[1])
+    rate = float(customer[2])
+    duration = customer[3]
+
+    # Calculate Interest
+
+    if duration == "DAILY":
+        interest_amount = (principal * rate) / (100 * 30)
+
+    elif duration == "MONTHLY":
+        interest_amount = (principal * rate) / 100
+
+    elif duration == "YEARLY":
+        interest_amount = (principal * rate * 12) / 100
+
+    else:
+        interest_amount = 0
+
+    # UPI Payment Link
+
+    upi_link = (
+        f"upi://pay?"
+        f"pa=7075868676-4@ybl"
+        f"&pn=Finance Collection"
+        f"&am={round(interest_amount,2)}"
+        f"&tn=Interest Payment"
+    )
+
+    # Generate QR
+
+    img = qrcode.make(upi_link)
+
+    # Create folder automatically
+
+    qr_path = f"static/qr/customer_{customer_id}.png"
+
+    img.save(qr_path)
+
+    return render_template(
+        "show_qr.html",
+        customer_name=name,
+        interest_amount=round(interest_amount, 2),
+        qr_image=f"qr/customer_{customer_id}.png"
     )
 
 @app.route('/collect_interest/<int:customer_id>')

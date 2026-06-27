@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Payment</title>
+</head>
+<body>
+
+<h1>QR Payment</h1>
+
+<h3>Customer : {{ customer_name }}</h3>
+
+<h3>Interest Amount : ₹{{ interest_amount }}</h3>
+
+<img src="{{ url_for('static', filename=qr_image) }}"
+     width="300">
+
+<br><br>
+
+<a href="{{ url_for('static', filename=qr_image) }}"
+   download>
+   Download QR
+</a>
+
+<br><br>
+
+<a href="/reminders">
+    Back To Reminder Dashboard
+</a>
+
+</body>
+</html>

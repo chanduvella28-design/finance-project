@@ -16,6 +16,7 @@
     <th>Rate %</th>
     <th>Due Date</th>
     <th>Interest Amount</th>
+    <th>QR Code</th>
     <th>Action</th>
 </tr>
 
@@ -28,6 +29,11 @@
     <td>{{ customer[3] }}</td>
     <td>{{ customer[4] }}</td>
     <td>{{ customer[5] }}</td>
+    <td>
+        <a href="/show_qr/{{ customer[0] }}">
+        Show QR
+        </a>
+    </td>
 
     <td>
         <a href="/collect_interest/{{ customer[0] }}">
