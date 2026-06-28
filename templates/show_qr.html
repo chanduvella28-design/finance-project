@@ -8,6 +8,7 @@
 <h1>QR Payment</h1>
 
 <h3>Customer : {{ customer_name }}</h3>
+<h3><strong>WhatsApp Number:</strong> {{ mobile }}</h3>
 
 <h3>Interest Amount : ₹{{ interest_amount }}</h3>
 
@@ -15,6 +16,7 @@
      width="300">
 
 <br><br>
+
 
 <a href="{{ url_for('static', filename=qr_image) }}"
    download>

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request,redirect,session
 from datetime import datetime, timedelta, date
+from urllib.parse import quote
 import psycopg2
 import qrcode
 import os
@@ -250,7 +251,6 @@ def reminders():
         'reminders.html',
         customers=customers
     )
-
 @app.route('/show_qr/<int:customer_id>')
 def show_qr(customer_id):
 
@@ -259,6 +259,7 @@ def show_qr(customer_id):
     cursor.execute("""
         SELECT
             name,
+            mobile,
             principal_amount,
             interest_rate,
             duration_type
@@ -272,9 +273,10 @@ def show_qr(customer_id):
         return "Customer Not Found"
 
     name = customer[0]
-    principal = float(customer[1])
-    rate = float(customer[2])
-    duration = customer[3]
+    mobile = customer[1]
+    principal = float(customer[2])
+    rate = float(customer[3])
+    duration = customer[4]
 
     # Calculate Interest
 
@@ -309,12 +311,12 @@ def show_qr(customer_id):
     qr_path = f"static/qr/customer_{customer_id}.png"
 
     img.save(qr_path)
-
     return render_template(
-        "show_qr.html",
-        customer_name=name,
-        interest_amount=round(interest_amount, 2),
-        qr_image=f"qr/customer_{customer_id}.png"
+    "show_qr.html",
+    customer_name=name,
+    mobile=mobile,
+    interest_amount=round(interest_amount, 2),
+    qr_image=f"qr/customer_{customer_id}.png"
     )
 
 @app.route('/collect_interest/<int:customer_id>')
