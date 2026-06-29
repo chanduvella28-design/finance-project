@@ -197,6 +197,8 @@ def close_loan(customer_id):
 @app.route('/reminders')
 def reminders():
 
+    from datetime import datetime, timedelta
+
     cursor.execute("""
         SELECT
             id,
@@ -215,6 +217,8 @@ def reminders():
 
     customers = []
 
+    today = datetime.today().date()
+
     for c in rows:
 
         customer_id = c[0]
@@ -224,28 +228,75 @@ def reminders():
         due_date = c[4]
         duration = c[5]
 
-        if duration == "DAILY":
-            interest = (principal * rate) / (100 * 30)
-
-        elif duration == "MONTHLY":
-            interest = (principal * rate) / 100
-
-        elif duration == "YEARLY":
-            interest = (principal * rate * 12) / 100
-
-        else:
-            interest = 0
-
-        customers.append(
-            (
-                customer_id,
-                name,
-                principal,
-                rate,
+        if isinstance(due_date, str):
+            due_date = datetime.strptime(
                 due_date,
-                round(interest, 2)
+                "%Y-%m-%d"
+            ).date()
+
+        # DAILY CUSTOMERS
+        if duration == "DAILY":
+
+            daily_interest = (
+                principal * rate
+            ) / (100 * 30)
+
+            missed_days = (
+                today - due_date
+            ).days + 1
+
+            for i in range(missed_days):
+
+                pending_date = (
+                    due_date + timedelta(days=i)
+                )
+
+                customers.append(
+                    (
+                        customer_id,
+                        name,
+                        principal,
+                        rate,
+                        pending_date,
+                        round(daily_interest, 2)
+                    )
+                )
+
+        # MONTHLY CUSTOMERS
+        elif duration == "MONTHLY":
+
+            interest = (
+                principal * rate
+            ) / 100
+
+            customers.append(
+                (
+                    customer_id,
+                    name,
+                    principal,
+                    rate,
+                    due_date,
+                    round(interest, 2)
+                )
             )
-        )
+
+        # YEARLY CUSTOMERS
+        elif duration == "YEARLY":
+
+            interest = (
+                principal * rate * 12
+            ) / 100
+
+            customers.append(
+                (
+                    customer_id,
+                    name,
+                    principal,
+                    rate,
+                    due_date,
+                    round(interest, 2)
+                )
+            )
 
     return render_template(
         'reminders.html',
